@@ -11,13 +11,17 @@
 <section class="card tiles">
     <div class="tile">
         <h3>בקשות שיבוץ</h3>
-        <p>בהמשך כאן יהיה מסך הזנת העדפות לשבוע הבא.</p>
+        <p>הזנת העדפות לשבוע הבא.</p>
+        <a class="button-link" href="/preferences">כניסה למסך</a>
     </div>
 
+    {% if role in ['admin', 'shift_manager'] %}
     <div class="tile">
         <h3>ניהול בקשות</h3>
-        <p>בהמשך כאן יהיה מסך מנהל / אחראי משמרת.</p>
+        <p>צפייה בכלל המשתמשים, הוספת עובדים וכניסה לכרטיס משתמש.</p>
+        <a class="button-link" href="/admin/preferences">כניסה למסך</a>
     </div>
+    {% endif %}
 
     <div class="tile">
         <h3>שיבוצים</h3>
