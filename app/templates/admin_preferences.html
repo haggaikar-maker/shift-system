@@ -1,34 +1,64 @@
 {% extends "base.html" %}
+{% block title %}ניהול בקשות שיבוץ{% endblock %}
+
 {% block content %}
+<section class="card">
+    <div class="page-head-row">
+        <div>
+            <h1>ניהול בקשות שיבוץ</h1>
+            <p class="subtitle">
+                שבוע: {{ week.week_start_date.strftime('%d/%m/%Y') }} - {{ week.week_end_date.strftime('%d/%m/%Y') }}
+            </p>
+        </div>
+        <div>
+            <a class="button-link" href="/admin/users/new">הוספת משתמש חדש</a>
+        </div>
+    </div>
 
-<h1>ניהול בקשות שיבוץ</h1>
+    {% if success == 'user_created' %}
+    <div class="success-box">המשתמש החדש נוצר בהצלחה.</div>
+    {% endif %}
+</section>
 
-<p>
-שבוע:
-{{ week.week_start_date.strftime('%d/%m/%Y') }}
--
-{{ week.week_end_date.strftime('%d/%m/%Y') }}
-</p>
-
-<table>
-<tr>
-<th>שם</th>
-<th>משתמש</th>
-<th>מילא?</th>
-<th>רוצה מאוד</th>
-<th>לא יכול</th>
-</tr>
-
-{% for r in rows %}
-<tr>
-<td>{{ r.name }}</td>
-<td>{{ r.username }}</td>
-<td>{{ "✔️" if r.filled else "❌" }}</td>
-<td>{{ r.want }}</td>
-<td>{{ r.cannot }}</td>
-</tr>
-{% endfor %}
-
-</table>
-
+<section class="card">
+    <div class="preferences-table-wrap">
+        <table class="preferences-table">
+            <thead>
+                <tr>
+                    <th>שם</th>
+                    <th>שם משתמש</th>
+                    <th>אימייל</th>
+                    <th>טלפון</th>
+                    <th>תפקיד</th>
+                    <th>מילא?</th>
+                    <th>רוצה מאוד</th>
+                    <th>לא יכול</th>
+                    <th>שבוע</th>
+                    <th>פעולות</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ r.name }}</td>
+                    <td>{{ r.username }}</td>
+                    <td>{{ r.email }}</td>
+                    <td>{{ r.phone }}</td>
+                    <td>{{ r.role }}</td>
+                    <td>{{ '✔️' if r.filled else '❌' }}</td>
+                    <td>{{ r.want }}</td>
+                    <td>{{ r.cannot }}</td>
+                    <td>{{ r.week_label }}</td>
+                    <td>
+                        <div class="table-actions">
+                            <a class="button-link small" href="/admin/users/{{ r.id }}">כרטיס משתמש</a>
+                            <a class="button-link small secondary" href="/preferences?user_id={{ r.id }}">העדפות</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}
