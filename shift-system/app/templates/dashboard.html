@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}דשבורד{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>ברוך הבא, {{ username }}</h1>
+    <p>רמת הרשאה: <strong>{{ role }}</strong></p>
+</section>
+
+<section class="card tiles">
+    <div class="tile">
+        <h3>בקשות שיבוץ</h3>
+        <p>בהמשך כאן יהיה מסך הזנת העדפות לשבוע הבא.</p>
+    </div>
+
+    <div class="tile">
+        <h3>ניהול בקשות</h3>
+        <p>בהמשך כאן יהיה מסך מנהל / אחראי משמרת.</p>
+    </div>
+
+    <div class="tile">
+        <h3>שיבוצים</h3>
+        <p>בהמשך כאן יהיה מנוע ההשמה והעריכה הידנית.</p>
+    </div>
+</section>
+{% endblock %}

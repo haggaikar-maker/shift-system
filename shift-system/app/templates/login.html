@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}התחברות{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+    <h1>התחברות למערכת</h1>
+    <p class="subtitle">כניסה עם שם משתמש וסיסמה</p>
+
+    {% if error %}
+    <div class="error-box">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/auth/login" class="form-grid">
+        <label>שם משתמש</label>
+        <input type="text" name="username" required>
+
+        <label>סיסמה</label>
+        <input type="password" name="password" required>
+
+        <button type="submit">התחבר</button>
+    </form>
+</section>
+{% endblock %}
