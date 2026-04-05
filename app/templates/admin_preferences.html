@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>ניהול בקשות שיבוץ</h1>
+
+<p>
+שבוע:
+{{ week.week_start_date.strftime('%d/%m/%Y') }}
+-
+{{ week.week_end_date.strftime('%d/%m/%Y') }}
+</p>
+
+<table>
+<tr>
+<th>שם</th>
+<th>משתמש</th>
+<th>מילא?</th>
+<th>רוצה מאוד</th>
+<th>לא יכול</th>
+</tr>
+
+{% for r in rows %}
+<tr>
+<td>{{ r.name }}</td>
+<td>{{ r.username }}</td>
+<td>{{ "✔️" if r.filled else "❌" }}</td>
+<td>{{ r.want }}</td>
+<td>{{ r.cannot }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% endblock %}
