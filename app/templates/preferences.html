@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>בקשות שיבוץ</h1>
+
+<form method="post">
+<table>
+<tr><th>משמרת</th><th>בחירה</th></tr>
+
+{% for s in shifts %}
+<tr>
+<td>{{ s.shift_date }} - {{ s.shift_type }}</td>
+<td>
+<select name="shift_{{ s.id }}">
+<option value="1">1 רוצה מאוד</option>
+<option value="2">2 רוצה</option>
+<option value="3">3 ניטרלי</option>
+<option value="4">4 לא רוצה</option>
+<option value="5">5 לא יכול</option>
+</select>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+<button type="submit">שמור</button>
+</form>
+
+{% endblock %}
