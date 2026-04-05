@@ -38,4 +38,14 @@ def login_submit(
     response = RedirectResponse(url="/dashboard", status_code=303)
     response.set_cookie("username", user.username, httponly=True)
     response.set_cookie("role", user.role, httponly=True)
+    response.set_cookie("user_id", str(user.id), httponly=True)
+    return response
+
+
+@router.get("/logout")
+def logout():
+    response = RedirectResponse(url="/auth/login", status_code=303)
+    response.delete_cookie("username")
+    response.delete_cookie("role")
+    response.delete_cookie("user_id")
     return response
