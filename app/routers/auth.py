@@ -12,7 +12,11 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request, "error": None})
+    return templates.TemplateResponse(
+        request,
+        "login.html",
+        {"error": None},
+    )
 
 
 @router.post("/login", response_class=HTMLResponse)
@@ -25,20 +29,13 @@ def login_submit(
     user = authenticate_user(db, username, password)
     if not user:
         return templates.TemplateResponse(
+            request,
             "login.html",
-            {"request": request, "error": "שם משתמש או סיסמה שגויים"},
+            {"error": "שם משתמש או סיסמה שגויים"},
             status_code=401,
         )
 
     response = RedirectResponse(url="/dashboard", status_code=303)
     response.set_cookie("username", user.username, httponly=True)
     response.set_cookie("role", user.role, httponly=True)
-    return response
-
-
-@router.get("/logout")
-def logout():
-    response = RedirectResponse(url="/auth/login", status_code=303)
-    response.delete_cookie("username")
-    response.delete_cookie("role")
     return response
