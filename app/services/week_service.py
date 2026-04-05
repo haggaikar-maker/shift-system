@@ -9,22 +9,25 @@ from app.models.shift import Shift
 SHIFT_TYPES = ["day", "night"]
 
 DAY_NAMES_HE = {
+    6: "ראשון",
     0: "שני",
     1: "שלישי",
     2: "רביעי",
     3: "חמישי",
     4: "שישי",
     5: "שבת",
-    6: "ראשון",
 }
 
 
 def get_next_week_start(today: date | None = None) -> date:
     today = today or date.today()
-    days_until_next_monday = (7 - today.weekday()) % 7
-    if days_until_next_monday == 0:
-        days_until_next_monday = 7
-    return today + timedelta(days=days_until_next_monday)
+
+    # weekday(): Monday=0 ... Sunday=6
+    days_until_next_sunday = (6 - today.weekday()) % 7
+    if days_until_next_sunday == 0:
+        days_until_next_sunday = 7
+
+    return today + timedelta(days=days_until_next_sunday)
 
 
 def get_or_create_next_week(db: Session, slots_per_shift: int = 2, shifts_per_day: int = 2) -> ScheduleWeek:
