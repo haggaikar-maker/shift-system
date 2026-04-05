@@ -1,29 +1,78 @@
 {% extends "base.html" %}
+
+{% block title %}בקשות שיבוץ{% endblock %}
+
 {% block content %}
+<section class="card">
+    <div class="page-head-row">
+        <div>
+            <h1>בקשות שיבוץ לשבוע הבא</h1>
+            <p class="subtitle">
+                שבוע: {{ week.week_start_date.strftime('%d/%m/%Y') }} - {{ week.week_end_date.strftime('%d/%m/%Y') }}
+            </p>
+            <p>
+                משתמש: <strong>{{ target_user.full_name }}</strong>
+                {% if current_role in ['admin', 'shift_manager'] %}
+                    <span class="muted-inline">({{ target_user.username }})</span>
+                {% endif %}
+            </p>
+        </div>
+        {% if current_role in ['admin', 'shift_manager'] %}
+        <div class="table-actions">
+            <a class="button-link secondary" href="/admin/users/{{ target_user.id }}">כרטיס משתמש</a>
+            <a class="button-link secondary" href="/admin/preferences">חזרה לניהול</a>
+        </div>
+        {% endif %}
+    </div>
 
-<h1>בקשות שיבוץ</h1>
+    {% if success %}
+    <div class="success-box">ההעדפות נשמרו בהצלחה.</div>
+    {% endif %}
 
-<form method="post">
-<table>
-<tr><th>משמרת</th><th>בחירה</th></tr>
+    <div class="legend-grid">
+        <div class="legend-item"><strong>1</strong> - ממש רוצה</div>
+        <div class="legend-item"><strong>2</strong> - רוצה</div>
+        <div class="legend-item"><strong>3</strong> - ניטרלי</div>
+        <div class="legend-item"><strong>4</strong> - לא רוצה</div>
+        <div class="legend-item"><strong>5</strong> - לא יכול</div>
+    </div>
 
-{% for s in shifts %}
-<tr>
-<td>{{ s.shift_date }} - {{ s.shift_type }}</td>
-<td>
-<select name="shift_{{ s.id }}">
-<option value="1">1 רוצה מאוד</option>
-<option value="2">2 רוצה</option>
-<option value="3">3 ניטרלי</option>
-<option value="4">4 לא רוצה</option>
-<option value="5">5 לא יכול</option>
-</select>
-</td>
-</tr>
-{% endfor %}
+    <div class="info-strip">
+        <span>ממש רוצה: {{ summary_counts[1] }}</span>
+        <span>לא יכול: {{ summary_counts[5] }}</span>
+    </div>
+</section>
 
-</table>
-<button type="submit">שמור</button>
-</form>
+<section class="card">
+    <form method="post" action="/preferences{% if current_role in ['admin', 'shift_manager'] %}?user_id={{ target_user.id }}{% endif %}" class="preferences-form">
+        <div class="preferences-table-wrap">
+            <table class="preferences-table">
+                <thead>
+                    <tr>
+                        <th>משמרת</th>
+                        <th>העדפה</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in shift_rows %}
+                    <tr>
+                        <td>{{ row.label }}</td>
+                        <td>
+                            <select name="shift_{{ row.id }}">
+                                {% for value, label in score_options %}
+                                <option value="{{ value }}" {% if row.score == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
+        <div class="actions-row">
+            <button type="submit">שמור בקשות שיבוץ</button>
+        </div>
+    </form>
+</section>
 {% endblock %}
