@@ -91,3 +91,57 @@ button:hover { background: var(--primary-dark); }
     padding: 16px;
     background: #fafafa;
 }
+.page-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.button-link.small {
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.button-link.secondary {
+    background: #eef2ff;
+    color: #1e3a8a;
+}
+
+.two-cols-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wide-card {
+    max-width: 900px;
+}
+
+.full-row {
+    grid-column: 1 / -1;
+}
+
+select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-size: 16px;
+    background: white;
+}
+
+.muted-inline {
+    color: var(--muted);
+}
+
+@media (max-width: 768px) {
+    .two-cols-form {
+        grid-template-columns: 1fr;
+    }
+}
