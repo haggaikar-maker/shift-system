@@ -20,9 +20,9 @@ def dashboard(request: Request):
         return RedirectResponse(url="/auth/login", status_code=303)
 
     return templates.TemplateResponse(
+        request,
         "dashboard.html",
         {
-            "request": request,
             "username": username,
             "role": role,
         },
