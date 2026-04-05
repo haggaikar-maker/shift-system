@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}כרטיס משתמש{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="page-head-row">
+        <div>
+            <h1>כרטיס משתמש</h1>
+            <p class="subtitle">{{ user_item.full_name }} ({{ user_item.username }})</p>
+        </div>
+        <div class="table-actions">
+            <a class="button-link" href="/preferences?user_id={{ user_item.id }}">עריכת העדפות</a>
+            <a class="button-link secondary" href="/admin/preferences">חזרה לניהול</a>
+        </div>
+    </div>
+</section>
+
+<section class="card tiles">
+    <div class="tile">
+        <h3>פרטים כלליים</h3>
+        <p><strong>שם:</strong> {{ user_item.full_name }}</p>
+        <p><strong>אימייל:</strong> {{ user_item.email }}</p>
+        <p><strong>טלפון:</strong> {{ user_item.phone }}</p>
+        <p><strong>תפקיד:</strong> {{ user_item.role }}</p>
+    </div>
+
+    <div class="tile">
+        <h3>אילוצי שיבוץ</h3>
+        <p><strong>מינימום שיבוצים:</strong> {{ user_item.min_shifts_per_week }}</p>
+        <p><strong>מקסימום שיבוצים:</strong> {{ user_item.max_shifts_per_week }}</p>
+        <p><strong>מרווח מינימלי:</strong> {{ user_item.min_gap_hours }} שעות</p>
+    </div>
+
+    <div class="tile">
+        <h3>סטטוס שבוע נוכחי</h3>
+        <p><strong>שבוע:</strong> {{ week.week_start_date.strftime('%d/%m/%Y') }} - {{ week.week_end_date.strftime('%d/%m/%Y') }}</p>
+        <p><strong>מילא העדפות:</strong> {{ 'כן' if summary.filled else 'לא' }}</p>
+        <p><strong>ממש רוצה:</strong> {{ summary.want_count }}</p>
+        <p><strong>לא יכול:</strong> {{ summary.cannot_count }}</p>
+    </div>
+</section>
+
+<section class="card tiles">
+    <div class="tile">
+        <h3>בקשות שיבוץ</h3>
+        <p>עריכה ישירה של העדפות המשתמש לשבוע הבא.</p>
+        <a class="button-link" href="/preferences?user_id={{ user_item.id }}">כניסה למסך</a>
+    </div>
+
+    <div class="tile">
+        <h3>שיבוצים</h3>
+        <p>בהמשך כאן יוצגו השיבוצים בפועל של המשתמש.</p>
+    </div>
+
+    <div class="tile">
+        <h3>שביעות רצון</h3>
+        <p>בהמשך כאן יוצג מדד שביעות הרצון הרב-שבועי.</p>
+    </div>
+</section>
+{% endblock %}
