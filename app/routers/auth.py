@@ -1,51 +1,108 @@
-from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.services.auth_service import authenticate_user
-
-router = APIRouter(prefix="/auth", tags=["auth"])
-templates = Jinja2Templates(directory="app/templates")
+from app.models.user import User
+from app.services.auth_service import hash_password
 
 
-@router.get("/login", response_class=HTMLResponse)
-def login_page(request: Request):
-    return templates.TemplateResponse(
-        request,
-        "login.html",
-        {"error": None},
-    )
+def get_user_by_username(db: Session, username: str):
+    return db.query(User).filter_by(username=username).first()
 
 
-@router.post("/login", response_class=HTMLResponse)
-def login_submit(
-    request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
-    db: Session = Depends(get_db),
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(User).filter_by(id=user_id).first()
+
+
+def list_users(db: Session):
+    return db.query(User).order_by(User.full_name.asc()).all()
+
+
+def create_user(
+    db: Session,
+    full_name: str,
+    username: str,
+    email: str,
+    phone: str,
+    password: str,
+    role: str = "user",
+    min_shifts_per_week: int = 0,
+    max_shifts_per_week: int = 5,
+    min_gap_hours: int = 12,
+    is_schedulable: bool = True,
 ):
-    user = authenticate_user(db, username, password)
-    if not user:
-        return templates.TemplateResponse(
-            request,
-            "login.html",
-            {"error": "שם משתמש או סיסמה שגויים"},
-            status_code=401,
-        )
+    user = User(
+        full_name=full_name.strip(),
+        username=username.strip(),
+        email=email.strip(),
+        phone=phone.strip(),
+        password_hash=hash_password(password),
+        role=role,
+        is_active=True,
+        is_schedulable=is_schedulable,
+        min_shifts_per_week=min_shifts_per_week,
+        max_shifts_per_week=max_shifts_per_week,
+        min_gap_hours=min_gap_hours,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
-    response = RedirectResponse(url="/dashboard", status_code=303)
-    response.set_cookie("username", user.username, httponly=True)
-    response.set_cookie("role", user.role, httponly=True)
-    response.set_cookie("user_id", str(user.id), httponly=True)
-    return response
+
+def update_user(
+    db: Session,
+    user: User,
+    full_name: str,
+    username: str,
+    email: str,
+    phone: str,
+    role: str,
+    min_shifts_per_week: int,
+    max_shifts_per_week: int,
+    min_gap_hours: int,
+    is_active: bool,
+    is_schedulable: bool,
+    password: str | None = None,
+):
+    user.full_name = full_name.strip()
+    user.username = username.strip()
+    user.email = email.strip()
+    user.phone = phone.strip()
+    user.role = role
+    user.min_shifts_per_week = min_shifts_per_week
+    user.max_shifts_per_week = max_shifts_per_week
+    user.min_gap_hours = min_gap_hours
+    user.is_active = is_active
+    user.is_schedulable = is_schedulable
+
+    if password and password.strip():
+        user.password_hash = hash_password(password.strip())
+
+    db.commit()
+    db.refresh(user)
+    return user
 
 
-@router.get("/logout")
-def logout():
-    response = RedirectResponse(url="/auth/login", status_code=303)
-    response.delete_cookie("username")
-    response.delete_cookie("role")
-    response.delete_cookie("user_id")
-    return response
+def delete_user(db: Session, user: User):
+    db.delete(user)
+    db.commit()
+
+
+def username_exists(db: Session, username: str, exclude_user_id: int | None = None) -> bool:
+    query = db.query(User).filter(User.username == username.strip())
+    if exclude_user_id is not None:
+        query = query.filter(User.id != exclude_user_id)
+    return query.first() is not None
+
+
+def email_exists(db: Session, email: str, exclude_user_id: int | None = None) -> bool:
+    query = db.query(User).filter(User.email == email.strip())
+    if exclude_user_id is not None:
+        query = query.filter(User.id != exclude_user_id)
+    return query.first() is not None
+
+
+def phone_exists(db: Session, phone: str, exclude_user_id: int | None = None) -> bool:
+    query = db.query(User).filter(User.phone == phone.strip())
+    if exclude_user_id is not None:
+        query = query.filter(User.id != exclude_user_id)
+    return query.first() is not None
