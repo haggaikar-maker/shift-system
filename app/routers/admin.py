@@ -49,7 +49,7 @@ def admin_preferences(request: Request, db: Session = Depends(get_db)):
                 "phone": user.phone,
                 "role": user.role,
                 "is_active": user.is_active,
-                "is_schedulable": user.is_schedulable,
+                "is_schedulable": getattr(user, "is_schedulable", True),
                 "filled": summary["filled"],
                 "want": summary["want_count"],
                 "cannot": summary["cannot_count"],
@@ -78,10 +78,7 @@ def new_user_page(request: Request):
         "admin_user_form.html",
         {
             "error": None,
-            "success": None,
             "role_options": ROLE_OPTIONS,
-            "mode": "create",
-            "user_item": None,
         },
     )
 
@@ -122,10 +119,7 @@ def create_user_submit(
             "admin_user_form.html",
             {
                 "error": error,
-                "success": None,
                 "role_options": ROLE_OPTIONS,
-                "mode": "create",
-                "user_item": None,
             },
             status_code=400,
         )
@@ -165,28 +159,8 @@ def user_detail_page(user_id: int, request: Request, db: Session = Depends(get_d
             "user_item": user,
             "week": week,
             "summary": summary,
-        },
-    )
-
-
-@router.get("/users/{user_id}/edit", response_class=HTMLResponse)
-def edit_user_page(user_id: int, request: Request, db: Session = Depends(get_db)):
-    if not _check_admin_access(request):
-        return RedirectResponse(url="/auth/login", status_code=303)
-
-    user = get_user_by_id(db, user_id)
-    if not user:
-        return RedirectResponse(url="/admin/preferences", status_code=303)
-
-    return templates.TemplateResponse(
-        request,
-        "admin_user_form.html",
-        {
-            "error": None,
-            "success": None,
             "role_options": ROLE_OPTIONS,
-            "mode": "edit",
-            "user_item": user,
+            "success": request.query_params.get("success"),
         },
     )
 
@@ -196,7 +170,6 @@ def edit_user_submit(
     user_id: int,
     request: Request,
     full_name: str = Form(...),
-    username: str = Form(...),
     email: str = Form(...),
     phone: str = Form(...),
     password: str = Form(""),
@@ -215,37 +188,10 @@ def edit_user_submit(
     if not user:
         return RedirectResponse(url="/admin/preferences", status_code=303)
 
-    error = None
-    if username_exists(db, username, exclude_user_id=user.id):
-        error = "שם המשתמש כבר קיים"
-    elif email_exists(db, email, exclude_user_id=user.id):
-        error = "האימייל כבר קיים"
-    elif phone_exists(db, phone, exclude_user_id=user.id):
-        error = "הטלפון כבר קיים"
-    elif role not in ROLE_OPTIONS:
-        error = "תפקיד לא תקין"
-    elif max_shifts_per_week < min_shifts_per_week:
-        error = "מקסימום שיבוצים חייב להיות גדול או שווה למינימום"
-
-    if error:
-        return templates.TemplateResponse(
-            request,
-            "admin_user_form.html",
-            {
-                "error": error,
-                "success": None,
-                "role_options": ROLE_OPTIONS,
-                "mode": "edit",
-                "user_item": user,
-            },
-            status_code=400,
-        )
-
     update_user(
         db=db,
         user=user,
         full_name=full_name,
-        username=username,
         email=email,
         phone=phone,
         role=role,
@@ -256,7 +202,7 @@ def edit_user_submit(
         is_schedulable=bool(is_schedulable),
         password=password,
     )
-    return RedirectResponse(url=f"/admin/users/{user.id}", status_code=303)
+    return RedirectResponse(url=f"/admin/users/{user_id}?success=updated", status_code=303)
 
 
 @router.post("/users/{user_id}/delete")
@@ -264,12 +210,13 @@ def delete_user_submit(user_id: int, request: Request, db: Session = Depends(get
     if not _check_admin_access(request):
         return RedirectResponse(url="/auth/login", status_code=303)
 
-    current_user_id = request.cookies.get("user_id")
-    if current_user_id and str(user_id) == str(current_user_id):
-        return RedirectResponse(url="/admin/preferences?success=cannot_delete_self", status_code=303)
-
+    current_username = request.cookies.get("username")
     user = get_user_by_id(db, user_id)
-    if user:
-        delete_user(db, user)
+    if not user:
+        return RedirectResponse(url="/admin/preferences", status_code=303)
 
+    if user.username == current_username:
+        return RedirectResponse(url=f"/admin/users/{user_id}?success=cannot_delete_self", status_code=303)
+
+    delete_user(db, user)
     return RedirectResponse(url="/admin/preferences?success=user_deleted", status_code=303)
