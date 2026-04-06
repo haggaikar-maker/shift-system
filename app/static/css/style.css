@@ -145,3 +145,27 @@ select {
         grid-template-columns: 1fr;
     }
 }
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: normal;
+}
+
+.checkbox-row input[type="checkbox"] {
+    width: auto;
+}
+
+.danger-button {
+    background: #b91c1c;
+    color: white;
+    border: none;
+    padding: 12px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.danger-button:hover {
+    background: #991b1b;
+}
