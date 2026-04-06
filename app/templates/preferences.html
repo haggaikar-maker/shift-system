@@ -17,6 +17,7 @@
                 {% endif %}
             </p>
         </div>
+
         {% if current_role in ['admin', 'shift_manager'] %}
         <div class="table-actions">
             <a class="button-link secondary" href="/admin/users/{{ target_user.id }}">כרטיס משתמש</a>
@@ -30,11 +31,11 @@
     {% endif %}
 
     <div class="legend-grid">
-        <div class="legend-item"><strong>1</strong> - ממש רוצה</div>
-        <div class="legend-item"><strong>2</strong> - רוצה</div>
-        <div class="legend-item"><strong>3</strong> - ניטרלי</div>
-        <div class="legend-item"><strong>4</strong> - לא רוצה</div>
-        <div class="legend-item"><strong>5</strong> - לא יכול</div>
+        {% for value, short_label in score_options %}
+        <div class="legend-item">
+            <strong>{{ short_label }}</strong> - {{ score_labels[value] }}
+        </div>
+        {% endfor %}
     </div>
 
     <div class="info-strip">
@@ -44,26 +45,43 @@
 </section>
 
 <section class="card">
-    <form method="post" action="/preferences{% if current_role in ['admin', 'shift_manager'] %}?user_id={{ target_user.id }}{% endif %}" class="preferences-form">
-        <div class="preferences-table-wrap">
-            <table class="preferences-table">
+    <form method="post" action="/preferences{% if current_role in ['admin', 'shift_manager'] %}?user_id={{ target_user.id }}{% endif %}">
+        <div class="week-grid-wrap">
+            <table class="week-grid-table">
                 <thead>
                     <tr>
-                        <th>משמרת</th>
-                        <th>העדפה</th>
+                        <th class="shift-type-header">משמרת</th>
+                        {% for day in days %}
+                        <th class="day-header">
+                            <div>{{ day.day_name }}</div>
+                            <div class="day-date">{{ day.date_text }}</div>
+                        </th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in shift_rows %}
+                    {% for row in table_rows %}
                     <tr>
-                        <td>{{ row.label }}</td>
-                        <td>
-                            <select name="shift_{{ row.id }}">
-                                {% for value, label in score_options %}
-                                <option value="{{ value }}" {% if row.score == value %}selected{% endif %}>{{ label }}</option>
+                        <td class="shift-type-cell">{{ row.shift_type_label }}</td>
+                        {% for cell in row.cells %}
+                        <td class="pref-cell">
+                            {% if cell.shift_id %}
+                            <div class="score-buttons">
+                                {% for value, short_label in score_options %}
+                                <label class="score-option score-{{ value }}">
+                                    <input
+                                        type="radio"
+                                        name="shift_{{ cell.shift_id }}"
+                                        value="{{ value }}"
+                                        {% if cell.score == value %}checked{% endif %}
+                                    >
+                                    <span title="{{ score_labels[value] }}">{{ short_label }}</span>
+                                </label>
                                 {% endfor %}
-                            </select>
+                            </div>
+                            {% endif %}
                         </td>
+                        {% endfor %}
                     </tr>
                     {% endfor %}
                 </tbody>
