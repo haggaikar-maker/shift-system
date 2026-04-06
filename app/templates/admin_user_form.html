@@ -1,87 +1,75 @@
 {% extends "base.html" %}
-{% block title %}{% if mode == 'edit' %}עריכת משתמש{% else %}הוספת משתמש{% endif %}{% endblock %}
+{% block title %}הוספת משתמש{% endblock %}
 
 {% block content %}
 <section class="card auth-card wide-card">
-    <h1>{% if mode == 'edit' %}עריכת משתמש{% else %}הוספת משתמש חדש{% endif %}</h1>
-    <p class="subtitle">פרטי משתמש, הרשאות ואילוצי שיבוץ</p>
+    <h1>הוספת משתמש חדש</h1>
+    <p class="subtitle">יצירת משתמש חדש עם תפקיד והרשאות</p>
 
     {% if error %}
     <div class="error-box">{{ error }}</div>
     {% endif %}
 
-    <form
-        method="post"
-        action="{% if mode == 'edit' %}/admin/users/{{ user_item.id }}/edit{% else %}/admin/users/new{% endif %}"
-        class="form-grid two-cols-form"
-    >
+    <form method="post" action="/admin/users/new" class="form-grid two-cols-form">
         <div>
             <label>שם מלא</label>
-            <input type="text" name="full_name" value="{{ user_item.full_name if user_item else '' }}" required>
+            <input type="text" name="full_name" required>
         </div>
 
         <div>
             <label>שם משתמש</label>
-            <input type="text" name="username" value="{{ user_item.username if user_item else '' }}" required>
+            <input type="text" name="username" required>
         </div>
 
         <div>
             <label>אימייל</label>
-            <input type="email" name="email" value="{{ user_item.email if user_item else '' }}" required>
+            <input type="email" name="email" required>
         </div>
 
         <div>
             <label>טלפון</label>
-            <input type="text" name="phone" value="{{ user_item.phone if user_item else '' }}" required>
+            <input type="text" name="phone" required>
         </div>
 
         <div>
-            <label>{% if mode == 'edit' %}סיסמה חדשה (לא חובה){% else %}סיסמה{% endif %}</label>
-            <input type="password" name="password" {% if mode != 'edit' %}required{% endif %}>
+            <label>סיסמה</label>
+            <input type="password" name="password" required>
         </div>
 
         <div>
             <label>תפקיד</label>
             <select name="role">
                 {% for role in role_options %}
-                <option value="{{ role }}" {% if user_item and user_item.role == role %}selected{% endif %}>{{ role }}</option>
+                <option value="{{ role }}">{{ role }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <div>
             <label>מינימום שיבוצים לשבוע</label>
-            <input type="number" name="min_shifts_per_week" min="0" value="{{ user_item.min_shifts_per_week if user_item else 0 }}" required>
+            <input type="number" name="min_shifts_per_week" min="0" value="0" required>
         </div>
 
         <div>
             <label>מקסימום שיבוצים לשבוע</label>
-            <input type="number" name="max_shifts_per_week" min="0" value="{{ user_item.max_shifts_per_week if user_item else 5 }}" required>
+            <input type="number" name="max_shifts_per_week" min="0" value="5" required>
         </div>
 
         <div>
             <label>מרווח מינימלי בין משמרות (שעות)</label>
-            <input type="number" name="min_gap_hours" min="0" value="{{ user_item.min_gap_hours if user_item else 12 }}" required>
+            <input type="number" name="min_gap_hours" min="0" value="12" required>
         </div>
 
-        <div class="checkbox-row">
-            <label>
-                <input type="checkbox" name="is_schedulable" {% if not user_item or user_item.is_schedulable %}checked{% endif %}>
-                המשתמש משתתף בשיבוץ השבוע
+        <div>
+            <label class="checkbox-row">
+                <input type="checkbox" name="is_schedulable" checked>
+                המשתמש משתתף בשיבוצים
             </label>
         </div>
 
-        {% if mode == 'edit' %}
-        <div class="checkbox-row">
-            <label>
-                <input type="checkbox" name="is_active" {% if user_item.is_active %}checked{% endif %}>
-                המשתמש פעיל
-            </label>
+        <div class="full-row">
+            <button type="submit">צור משתמש</button>
         </div>
-        {% endif %}
-
-        <div class="full-row table-actions">
-            <button type="submit">{% if mode == 'edit' %}שמור שינויים{% else %}צור משתמש{% endif %}</button>
-
-            {% if mode == 'edit' %}
-           
+    </form>
+</section>
+{% endblock %}
