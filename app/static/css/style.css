@@ -165,6 +165,127 @@ select {
     cursor: pointer;
     font-weight: bold;
 }
+.week-grid-wrap {
+    overflow-x: auto;
+}
+
+.week-grid-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 980px;
+}
+
+.week-grid-table th,
+.week-grid-table td {
+    border: 1px solid var(--border);
+    padding: 12px 10px;
+    text-align: center;
+    vertical-align: middle;
+    background: white;
+}
+
+.week-grid-table thead th {
+    background: #f8fafc;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.shift-type-header,
+.shift-type-cell {
+    min-width: 110px;
+    font-weight: bold;
+    background: #f8fafc;
+}
+
+.day-header {
+    min-width: 120px;
+}
+
+.day-date {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.pref-cell {
+    min-width: 140px;
+}
+
+.score-buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+.score-option {
+    cursor: pointer;
+}
+
+.score-option input {
+    display: none;
+}
+
+.score-option span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-weight: bold;
+    transition: 0.15s ease-in-out;
+    user-select: none;
+}
+
+.score-option input:checked + span {
+    border: 2px solid #111827;
+    transform: scale(1.03);
+}
+
+.score-1 span {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.score-2 span {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.score-3 span {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.score-4 span {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.score-5 span {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+@media (max-width: 768px) {
+    .score-buttons {
+        grid-template-columns: repeat(5, minmax(28px, 1fr));
+        gap: 4px;
+    }
+
+    .score-option span {
+        min-height: 34px;
+        font-size: 13px;
+        padding: 0;
+    }
+
+    .week-grid-table {
+        min-width: 860px;
+    }
+}
 
 .danger-button:hover {
     background: #991b1b;
