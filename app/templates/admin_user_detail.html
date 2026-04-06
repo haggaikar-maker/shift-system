@@ -13,24 +13,86 @@
             <a class="button-link secondary" href="/admin/preferences">חזרה לניהול</a>
         </div>
     </div>
+
+    {% if success == 'updated' %}
+    <div class="success-box">פרטי המשתמש עודכנו בהצלחה.</div>
+    {% elif success == 'cannot_delete_self' %}
+    <div class="error-box">אי אפשר למחוק את המשתמש שמחובר כרגע.</div>
+    {% endif %}
+</section>
+
+<section class="card">
+    <form method="post" action="/admin/users/{{ user_item.id }}/edit" class="form-grid two-cols-form">
+        <div>
+            <label>שם מלא</label>
+            <input type="text" name="full_name" value="{{ user_item.full_name }}" required>
+        </div>
+
+        <div>
+            <label>שם משתמש</label>
+            <input type="text" value="{{ user_item.username }}" disabled>
+        </div>
+
+        <div>
+            <label>אימייל</label>
+            <input type="email" name="email" value="{{ user_item.email }}" required>
+        </div>
+
+        <div>
+            <label>טלפון</label>
+            <input type="text" name="phone" value="{{ user_item.phone }}" required>
+        </div>
+
+        <div>
+            <label>סיסמה חדשה (לא חובה)</label>
+            <input type="password" name="password">
+        </div>
+
+        <div>
+            <label>תפקיד</label>
+            <select name="role">
+                {% for role in role_options %}
+                <option value="{{ role }}" {% if user_item.role == role %}selected{% endif %}>{{ role }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label>מינימום שיבוצים לשבוע</label>
+            <input type="number" name="min_shifts_per_week" min="0" value="{{ user_item.min_shifts_per_week }}" required>
+        </div>
+
+        <div>
+            <label>מקסימום שיבוצים לשבוע</label>
+            <input type="number" name="max_shifts_per_week" min="0" value="{{ user_item.max_shifts_per_week }}" required>
+        </div>
+
+        <div>
+            <label>מרווח מינימלי בין משמרות (שעות)</label>
+            <input type="number" name="min_gap_hours" min="0" value="{{ user_item.min_gap_hours }}" required>
+        </div>
+
+        <div>
+            <label class="checkbox-row">
+                <input type="checkbox" name="is_active" {% if user_item.is_active %}checked{% endif %}>
+                משתמש פעיל
+            </label>
+        </div>
+
+        <div>
+            <label class="checkbox-row">
+                <input type="checkbox" name="is_schedulable" {% if user_item.is_schedulable %}checked{% endif %}>
+                משתתף בשיבוץ השבועי
+            </label>
+        </div>
+
+        <div class="full-row table-actions">
+            <button type="submit">שמור שינויים</button>
+        </div>
+    </form>
 </section>
 
 <section class="card tiles">
-    <div class="tile">
-        <h3>פרטים כלליים</h3>
-        <p><strong>שם:</strong> {{ user_item.full_name }}</p>
-        <p><strong>אימייל:</strong> {{ user_item.email }}</p>
-        <p><strong>טלפון:</strong> {{ user_item.phone }}</p>
-        <p><strong>תפקיד:</strong> {{ user_item.role }}</p>
-    </div>
-
-    <div class="tile">
-        <h3>אילוצי שיבוץ</h3>
-        <p><strong>מינימום שיבוצים:</strong> {{ user_item.min_shifts_per_week }}</p>
-        <p><strong>מקסימום שיבוצים:</strong> {{ user_item.max_shifts_per_week }}</p>
-        <p><strong>מרווח מינימלי:</strong> {{ user_item.min_gap_hours }} שעות</p>
-    </div>
-
     <div class="tile">
         <h3>סטטוס שבוע נוכחי</h3>
         <p><strong>שבוע:</strong> {{ week.week_start_date.strftime('%d/%m/%Y') }} - {{ week.week_end_date.strftime('%d/%m/%Y') }}</p>
@@ -38,9 +100,7 @@
         <p><strong>ממש רוצה:</strong> {{ summary.want_count }}</p>
         <p><strong>לא יכול:</strong> {{ summary.cannot_count }}</p>
     </div>
-</section>
 
-<section class="card tiles">
     <div class="tile">
         <h3>בקשות שיבוץ</h3>
         <p>עריכה ישירה של העדפות המשתמש לשבוע הבא.</p>
@@ -48,13 +108,11 @@
     </div>
 
     <div class="tile">
-        <h3>שיבוצים</h3>
-        <p>בהמשך כאן יוצגו השיבוצים בפועל של המשתמש.</p>
-    </div>
-
-    <div class="tile">
-        <h3>שביעות רצון</h3>
-        <p>בהמשך כאן יוצג מדד שביעות הרצון הרב-שבועי.</p>
+        <h3>מחיקת משתמש</h3>
+        <p>הפעולה מוחקת את המשתמש מהמערכת.</p>
+        <form method="post" action="/admin/users/{{ user_item.id }}/delete" onsubmit="return confirm('למחוק את המשתמש?');">
+            <button type="submit" class="danger-button">מחק משתמש</button>
+        </form>
     </div>
 </section>
 {% endblock %}
