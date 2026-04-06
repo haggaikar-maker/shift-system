@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import admin, auth, pages, preferences, profile
+from app.routers import auth, pages, preferences, admin, profile
 
 app = FastAPI(title=settings.APP_NAME)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
