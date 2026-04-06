@@ -1,196 +1,59 @@
-from collections import defaultdict
+{% extends "base.html" %}
+{% block title %}השיבוצים שלי{% endblock %}
 
-from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+{% block content %}
+<section class="card">
+    <h1>השיבוצים שלי</h1>
+    <p class="subtitle">
+        שבוע: {{ week.week_start_date.strftime('%d/%m/%Y') }} - {{ week.week_end_date.strftime('%d/%m/%Y') }}
+    </p>
 
-from app.database import get_db
-from app.models.assignment import Assignment
-from app.models.shift import Shift
-from app.models.user import User
-from app.models.user_message import UserMessage
-from app.services.assignment_service import run_assignment_algorithm
-from app.services.satisfaction_service import calculate_satisfaction
-from app.services.user_service import get_user_by_username
-from app.services.week_service import get_or_create_next_week, get_week_shifts
+    {% if success == 'message_sent' %}
+    <div class="success-box">ההודעה נשלחה למנהל.</div>
+    {% endif %}
+</section>
 
-router = APIRouter(prefix="/assignments", tags=["assignments"])
-templates = Jinja2Templates(directory="app/templates")
+{% if not is_published %}
+<section class="card">
+    <p>השיבוצים עדיין לא פורסמו למשתמשים.</p>
+</section>
+{% else %}
+<section class="card">
+    <div class="preferences-table-wrap">
+        <table class="preferences-table">
+            <thead>
+                <tr>
+                    <th>יום</th>
+                    <th>תאריך</th>
+                    <th>משמרת</th>
+                    <th>סטטוס</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in assigned_shifts %}
+                <tr>
+                    <td>{{ row.day_name }}</td>
+                    <td>{{ row.date }}</td>
+                    <td>{{ row.shift_type }}</td>
+                    <td>{{ 'נעול' if row.locked else 'רגיל' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not assigned_shifts %}
+                <tr>
+                    <td colspan="4">אין שיבוצים עבורך בשבוע זה.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
 
-
-def _admin_access(request: Request):
-    username = request.cookies.get("username")
-    role = request.cookies.get("role")
-    return username and role in ["admin", "shift_manager"]
-
-
-@router.get("/admin", response_class=HTMLResponse)
-def assignments_admin_page(request: Request, db: Session = Depends(get_db)):
-    if not _admin_access(request):
-        return RedirectResponse(url="/auth/login", status_code=303)
-
-    week = get_or_create_next_week(db)
-    shifts = get_week_shifts(db, week.id)
-
-    assignments = db.query(Assignment).filter(Assignment.week_id == week.id).all()
-    users = {u.id: u for u in db.query(User).all()}
-
-    shift_users = defaultdict(list)
-    for a in assignments:
-        shift_users[a.shift_id].append({
-            "assignment_id": a.id,
-            "user_id": a.user_id,
-            "name": users[a.user_id].full_name if a.user_id in users else f"User {a.user_id}",
-            "locked": a.locked,
-        })
-
-    days = []
-    seen_dates = set()
-    for shift in shifts:
-        if shift.shift_date not in seen_dates:
-            seen_dates.add(shift.shift_date)
-            days.append({
-                "date_obj": shift.shift_date,
-                "day_name": ["שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת", "ראשון"][shift.shift_date.weekday()],
-                "date_text": shift.shift_date.strftime("%d/%m/%Y"),
-            })
-
-    table_rows = []
-    for shift_type, shift_type_label in [("day", "יום"), ("night", "לילה")]:
-        row_cells = []
-        for day in days:
-            target_shift = next(
-                (s for s in shifts if s.shift_date == day["date_obj"] and s.shift_type == shift_type),
-                None
-            )
-            if target_shift:
-                row_cells.append({
-                    "shift_id": target_shift.id,
-                    "capacity": target_shift.capacity,
-                    "assigned_users": shift_users.get(target_shift.id, []),
-                })
-            else:
-                row_cells.append({
-                    "shift_id": None,
-                    "capacity": 0,
-                    "assigned_users": [],
-                })
-
-        table_rows.append({
-            "shift_type": shift_type,
-            "shift_type_label": shift_type_label,
-            "cells": row_cells,
-        })
-
-    return templates.TemplateResponse(
-        request,
-        "assignments_admin.html",
-        {
-            "week": week,
-            "days": days,
-            "table_rows": table_rows,
-            "success": request.query_params.get("success"),
-        },
-    )
-
-
-@router.get("/run")
-def run_assignments(request: Request, db: Session = Depends(get_db)):
-    if not _admin_access(request):
-        return RedirectResponse(url="/auth/login", status_code=303)
-
-    week = get_or_create_next_week(db)
-    run_assignment_algorithm(db, week.id)
-    calculate_satisfaction(db, week.id)
-    return RedirectResponse(url="/assignments/admin?success=ran", status_code=303)
-
-
-@router.get("/publish")
-def publish_assignments(request: Request, db: Session = Depends(get_db)):
-    if not _admin_access(request):
-        return RedirectResponse(url="/auth/login", status_code=303)
-
-    week = get_or_create_next_week(db)
-    week.status = "published"
-    db.commit()
-    return RedirectResponse(url="/assignments/admin?success=published", status_code=303)
-
-
-@router.get("", response_class=HTMLResponse)
-def assignments_user_page(request: Request, db: Session = Depends(get_db)):
-    username = request.cookies.get("username")
-    if not username:
-        return RedirectResponse(url="/auth/login", status_code=303)
-
-    current_user = get_user_by_username(db, username)
-    if not current_user:
-        return RedirectResponse(url="/auth/login", status_code=303)
-
-    week = get_or_create_next_week(db)
-
-    if week.status != "published":
-        return templates.TemplateResponse(
-            request,
-            "assignments_user.html",
-            {
-                "week": week,
-                "is_published": False,
-                "assigned_shifts": [],
-                "success": request.query_params.get("success"),
-            },
-        )
-
-    assignments = (
-        db.query(Assignment, Shift)
-        .join(Shift, Shift.id == Assignment.shift_id)
-        .filter(Assignment.week_id == week.id, Assignment.user_id == current_user.id)
-        .order_by(Shift.shift_date.asc(), Shift.shift_type.asc())
-        .all()
-    )
-
-    assigned_shifts = []
-    for assignment, shift in assignments:
-        assigned_shifts.append({
-            "date": shift.shift_date.strftime("%d/%m/%Y"),
-            "day_name": ["שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת", "ראשון"][shift.shift_date.weekday()],
-            "shift_type": "יום" if shift.shift_type == "day" else "לילה",
-            "locked": assignment.locked,
-        })
-
-    return templates.TemplateResponse(
-        request,
-        "assignments_user.html",
-        {
-            "week": week,
-            "is_published": True,
-            "assigned_shifts": assigned_shifts,
-            "success": request.query_params.get("success"),
-        },
-    )
-
-
-@router.post("/message")
-def send_assignment_message(
-    request: Request,
-    message: str = Form(...),
-    db: Session = Depends(get_db),
-):
-    username = request.cookies.get("username")
-    if not username:
-        return RedirectResponse(url="/auth/login", status_code=303)
-
-    current_user = get_user_by_username(db, username)
-    if not current_user:
-        return RedirectResponse(url="/auth/login", status_code=303)
-
-    week = get_or_create_next_week(db)
-
-    db.add(UserMessage(
-        user_id=current_user.id,
-        week_id=week.id,
-        message=message.strip(),
-    ))
-    db.commit()
-
-    return RedirectResponse(url="/assignments?success=message_sent", status_code=303)
+<section class="card">
+    <h3>שליחת הודעה למנהל</h3>
+    <form method="post" action="/assignments/message" class="form-grid">
+        <textarea name="message" rows="5" required></textarea>
+        <button type="submit">שלח הודעה</button>
+    </form>
+</section>
+{% endif %}
+{% endblock %}
