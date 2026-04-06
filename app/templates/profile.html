@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}הפרופיל שלי{% endblock %}
+
+{% block content %}
+<section class="card auth-card wide-card">
+    <h1>עריכת פרטים אישיים</h1>
+    <p class="subtitle">כאן אפשר לעדכן את הפרטים שלך</p>
+
+    {% if error %}
+    <div class="error-box">{{ error }}</div>
+    {% endif %}
+
+    {% if success %}
+    <div class="success-box">הפרטים עודכנו בהצלחה.</div>
+    {% endif %}
+
+    <form method="post" action="/profile" class="form-grid two-cols-form">
+        <div>
+            <label>שם מלא</label>
+            <input type="text" name="full_name" value="{{ user_item.full_name }}" required>
+        </div>
+
+        <div>
+            <label>שם משתמש</label>
+            <input type="text" name="username" value="{{ user_item.username }}" required>
+        </div>
+
+        <div>
+            <label>אימייל</label>
+            <input type="email" name="email" value="{{ user_item.email }}" required>
+        </div>
+
+        <div>
+            <label>טלפון</label>
+            <input type="text" name="phone" value="{{ user_item.phone }}" required>
+        </div>
+
+        <div class="full-row">
+            <label>סיסמה חדשה (לא חובה)</label>
+            <input type="password" name="password">
+        </div>
+
+        <div class="full-row">
+            <button type="submit">שמור שינויים</button>
+        </div>
+    </form>
+</section>
+{% endblock %}
