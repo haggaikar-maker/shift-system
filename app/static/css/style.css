@@ -324,3 +324,37 @@ textarea {
 .danger-button:hover {
     background: #991b1b;
 }
+.assignment-users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.assignment-pill {
+    background: #f3f4f6;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.lock-badge {
+    display: inline-block;
+    margin-inline-start: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-size: 16px;
+    font-family: inherit;
+}
