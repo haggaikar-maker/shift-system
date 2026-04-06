@@ -17,6 +17,10 @@
 
     {% if success == 'user_created' %}
     <div class="success-box">המשתמש החדש נוצר בהצלחה.</div>
+    {% elif success == 'user_deleted' %}
+    <div class="success-box">המשתמש נמחק בהצלחה.</div>
+    {% elif success == 'cannot_delete_self' %}
+    <div class="error-box">אי אפשר למחוק את המשתמש שמחובר כרגע.</div>
     {% endif %}
 </section>
 
@@ -30,6 +34,8 @@
                     <th>אימייל</th>
                     <th>טלפון</th>
                     <th>תפקיד</th>
+                    <th>פעיל</th>
+                    <th>בשיבוץ השבוע</th>
                     <th>מילא?</th>
                     <th>רוצה מאוד</th>
                     <th>לא יכול</th>
@@ -45,6 +51,8 @@
                     <td>{{ r.email }}</td>
                     <td>{{ r.phone }}</td>
                     <td>{{ r.role }}</td>
+                    <td>{{ 'כן' if r.is_active else 'לא' }}</td>
+                    <td>{{ 'כן' if r.is_schedulable else 'לא' }}</td>
                     <td>{{ '✔️' if r.filled else '❌' }}</td>
                     <td>{{ r.want }}</td>
                     <td>{{ r.cannot }}</td>
@@ -53,6 +61,7 @@
                         <div class="table-actions">
                             <a class="button-link small" href="/admin/users/{{ r.id }}">כרטיס משתמש</a>
                             <a class="button-link small secondary" href="/preferences?user_id={{ r.id }}">העדפות</a>
+                            <a class="button-link small secondary" href="/admin/users/{{ r.id }}/edit">עריכה</a>
                         </div>
                     </td>
                 </tr>
