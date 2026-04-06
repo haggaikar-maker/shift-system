@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -6,18 +8,31 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.preference_service import get_user_preferences_for_week, upsert_preferences
 from app.services.user_service import get_user_by_id, get_user_by_username
-from app.services.week_service import get_or_create_next_week, get_shift_label, get_week_shifts
+from app.services.week_service import get_or_create_next_week, get_week_shifts
 
 router = APIRouter(prefix="/preferences", tags=["preferences"])
 templates = Jinja2Templates(directory="app/templates")
 
 SCORE_OPTIONS = [
-    (1, "1 - ממש רוצה"),
-    (2, "2 - רוצה"),
-    (3, "3 - ניטרלי"),
-    (4, "4 - לא רוצה"),
-    (5, "5 - לא יכול"),
+    (1, "1"),
+    (2, "2"),
+    (3, "3"),
+    (4, "4"),
+    (5, "5"),
 ]
+
+SCORE_LABELS = {
+    1: "ממש רוצה",
+    2: "רוצה",
+    3: "ניטרלי",
+    4: "לא רוצה",
+    5: "לא יכול",
+}
+
+SHIFT_TYPE_LABELS = {
+    "day": "יום",
+    "night": "לילה",
+}
 
 
 def _resolve_target_user(request: Request, db: Session):
@@ -55,19 +70,52 @@ def preferences_page(request: Request, db: Session = Depends(get_db)):
     shifts = get_week_shifts(db, week.id)
     user_scores = get_user_preferences_for_week(db, target_user.id, week.id)
 
-    shift_rows = []
+    days = []
+    shifts_by_type = defaultdict(list)
+
     for shift in shifts:
-        shift_rows.append(
+        if shift.shift_date not in [d["date_obj"] for d in days]:
+            days.append(
+                {
+                    "date_obj": shift.shift_date,
+                    "day_name": ["שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת", "ראשון"][shift.shift_date.weekday()],
+                    "date_text": shift.shift_date.strftime("%d/%m/%Y"),
+                }
+            )
+
+        shifts_by_type[shift.shift_type].append(
             {
                 "id": shift.id,
-                "label": get_shift_label(shift),
+                "shift_date": shift.shift_date,
                 "score": user_scores.get(shift.id, 3),
             }
         )
 
+    table_rows = []
+    for shift_type in ["day", "night"]:
+        row_cells = []
+        shifts_map = {item["shift_date"]: item for item in shifts_by_type.get(shift_type, [])}
+
+        for day in days:
+            shift_item = shifts_map.get(day["date_obj"])
+            row_cells.append(
+                {
+                    "shift_id": shift_item["id"] if shift_item else None,
+                    "score": shift_item["score"] if shift_item else 3,
+                }
+            )
+
+        table_rows.append(
+            {
+                "shift_type": shift_type,
+                "shift_type_label": SHIFT_TYPE_LABELS[shift_type],
+                "cells": row_cells,
+            }
+        )
+
     summary_counts = {
-        1: sum(1 for row in shift_rows if row["score"] == 1),
-        5: sum(1 for row in shift_rows if row["score"] == 5),
+        1: sum(1 for score in user_scores.values() if score == 1),
+        5: sum(1 for score in user_scores.values() if score == 5),
     }
 
     return templates.TemplateResponse(
@@ -75,8 +123,10 @@ def preferences_page(request: Request, db: Session = Depends(get_db)):
         "preferences.html",
         {
             "week": week,
-            "shift_rows": shift_rows,
+            "days": days,
+            "table_rows": table_rows,
             "score_options": SCORE_OPTIONS,
+            "score_labels": SCORE_LABELS,
             "summary_counts": summary_counts,
             "success": request.query_params.get("success"),
             "target_user": target_user,
