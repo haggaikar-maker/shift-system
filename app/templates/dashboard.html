@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}דשבורד{% endblock %}
 
 {% block content %}
@@ -15,17 +14,24 @@
         <a class="button-link" href="/preferences">כניסה למסך</a>
     </div>
 
+    <div class="tile">
+        <h3>השיבוצים שלי</h3>
+        <p>צפייה בשיבוץ השבועי שנבחר עבורך לאחר פרסום.</p>
+        <a class="button-link" href="/assignments">כניסה למסך</a>
+    </div>
+
     {% if role in ['admin', 'shift_manager'] %}
     <div class="tile">
         <h3>ניהול בקשות</h3>
         <p>צפייה בכלל המשתמשים, הוספת עובדים וכניסה לכרטיס משתמש.</p>
         <a class="button-link" href="/admin/preferences">כניסה למסך</a>
     </div>
-    {% endif %}
 
     <div class="tile">
-        <h3>שיבוצים</h3>
-        <p>בהמשך כאן יהיה מנוע ההשמה והעריכה הידנית.</p>
+        <h3>ניהול שיבוצים</h3>
+        <p>הרצת האלגוריתם, עריכה ידנית ופרסום.</p>
+        <a class="button-link" href="/assignments/admin">כניסה למסך</a>
     </div>
+    {% endif %}
 </section>
 {% endblock %}
