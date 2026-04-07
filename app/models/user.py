@@ -18,8 +18,12 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(30), nullable=False, default="user")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_schedulable: Mapped[bool] = mapped_column(Boolean, default=True)
+
     min_shifts_per_week: Mapped[int] = mapped_column(Integer, default=0)
     max_shifts_per_week: Mapped[int] = mapped_column(Integer, default=5)
     min_gap_hours: Mapped[int] = mapped_column(Integer, default=12)
+
+    satisfaction_override: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
