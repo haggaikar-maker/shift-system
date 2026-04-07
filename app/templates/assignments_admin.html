@@ -9,20 +9,75 @@
             <p class="subtitle">
                 שבוע: {{ week.week_start_date.strftime('%d/%m/%Y') }} - {{ week.week_end_date.strftime('%d/%m/%Y') }}
             </p>
-            <p><strong>סטטוס:</strong> {{ week.status }}</p>
+            <p>
+                <strong>סטטוס:</strong> {{ week.status }}
+                {% if week.published_at %}
+                | <strong>פורסם:</strong> {{ week.published_at.strftime('%d/%m/%Y %H:%M') }}
+                {% endif %}
+            </p>
         </div>
 
         <div class="table-actions">
-            <a class="button-link" href="/assignments/run">בצע שיבוץ</a>
-            <a class="button-link secondary" href="/assignments/publish">פרסם למשתמשים</a>
+            <form method="post" action="/assignments/run">
+                <input type="hidden" name="week_id" value="{{ week.id }}">
+                <button type="submit">בצע שיבוץ</button>
+            </form>
+
+            <form method="post" action="/assignments/publish">
+                <input type="hidden" name="week_id" value="{{ week.id }}">
+                <button type="submit" class="button-link secondary">פרסם למשתמשים</button>
+            </form>
         </div>
     </div>
 
-    {% if success == 'ran' %}
-    <div class="success-box">השיבוץ בוצע בהצלחה.</div>
-    {% elif success == 'published' %}
-    <div class="success-box">השיבוצים פורסמו למשתמשים.</div>
+    <form method="get" action="/assignments/admin" class="table-actions">
+        <label>שבוע קודם / נוכחי:</label>
+        <select name="week_id" onchange="this.form.submit()">
+            {% for w in weeks_history %}
+            <option value="{{ w.id }}" {% if w.id == week.id %}selected{% endif %}>
+                {{ w.week_start_date.strftime('%d/%m/%Y') }} - {{ w.week_end_date.strftime('%d/%m/%Y') }}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if success %}
+    <div class="success-box">הפעולה נשמרה בהצלחה.</div>
     {% endif %}
+</section>
+
+<section class="card">
+    <h3>שביעות רצון / Override</h3>
+    <div class="preferences-table-wrap">
+        <table class="preferences-table">
+            <thead>
+                <tr>
+                    <th>משתמש</th>
+                    <th>שביעות רצון כללית</th>
+                    <th>Override ידני</th>
+                    <th>שמירה</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.full_name }}</td>
+                    <td>{{ satisfaction_map.get(user.id, '-') }}</td>
+                    <td>
+                        <form method="post" action="/assignments/override" class="table-actions">
+                            <input type="hidden" name="week_id" value="{{ week.id }}">
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <input type="number" name="override_value" value="{{ user.satisfaction_override if user.satisfaction_override is not none else '' }}" style="max-width:100px;">
+                    </td>
+                    <td>
+                            <button type="submit" class="button-link small">שמור</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
 
 <section class="card">
@@ -47,13 +102,26 @@
                     <td class="pref-cell">
                         {% if cell.shift_id %}
                             <div><strong>תקנים:</strong> {{ cell.capacity }}</div>
+
                             <div class="assignment-users-list">
                                 {% for item in cell.assigned_users %}
                                 <div class="assignment-pill">
-                                    {{ item.user_name }}
-                                    {% if item.locked %}
-                                    <span class="lock-badge">נעול</span>
-                                    {% endif %}
+                                    <div><strong>{{ item.user_name }}</strong></div>
+                                    <div class="table-actions" style="margin-top:8px;">
+                                        <form method="post" action="/assignments/toggle-lock">
+                                            <input type="hidden" name="week_id" value="{{ week.id }}">
+                                            <input type="hidden" name="assignment_id" value="{{ item.assignment_id }}">
+                                            <button type="submit" class="button-link small secondary">
+                                                {{ 'שחרר' if item.locked else 'נעל' }}
+                                            </button>
+                                        </form>
+
+                                        <form method="post" action="/assignments/remove" onsubmit="return confirm('למחוק שיבוץ זה?');">
+                                            <input type="hidden" name="week_id" value="{{ week.id }}">
+                                            <input type="hidden" name="assignment_id" value="{{ item.assignment_id }}">
+                                            <button type="submit" class="danger-button">מחק</button>
+                                        </form>
+                                    </div>
                                 </div>
                                 {% endfor %}
 
@@ -61,6 +129,18 @@
                                 <div class="muted-inline">אין משובצים</div>
                                 {% endif %}
                             </div>
+
+                            <form method="post" action="/assignments/add" class="form-grid" style="margin-top:10px;">
+                                <input type="hidden" name="week_id" value="{{ week.id }}">
+                                <input type="hidden" name="shift_id" value="{{ cell.shift_id }}">
+                                <select name="user_id" required>
+                                    <option value="">בחר משתמש</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}">{{ user.full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="button-link small">הוסף ידנית</button>
+                            </form>
                         {% endif %}
                     </td>
                     {% endfor %}
