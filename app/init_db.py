@@ -2,17 +2,29 @@ from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
-from app.models import User, ScheduleWeek, Shift, Preference
+from app.models import User, ScheduleWeek, Shift, Preference, Assignment, Satisfaction, UserMessage
 from app.services.auth_service import hash_password
 
 
 def ensure_user_columns():
     inspector = inspect(engine)
-    columns = [col["name"] for col in inspector.get_columns("users")]
+    user_columns = [col["name"] for col in inspector.get_columns("users")]
+    week_columns = [col["name"] for col in inspector.get_columns("schedule_weeks")]
 
     with engine.connect() as conn:
-        if "is_schedulable" not in columns:
-            conn.execute(text("ALTER TABLE users ADD COLUMN is_schedulable BOOLEAN DEFAULT 1"))
+        # users.is_schedulable
+        if "is_schedulable" not in user_columns:
+            conn.execute(text("ALTER TABLE users ADD COLUMN is_schedulable BOOLEAN DEFAULT TRUE"))
+            conn.commit()
+
+        # users.satisfaction_override
+        if "satisfaction_override" not in user_columns:
+            conn.execute(text("ALTER TABLE users ADD COLUMN satisfaction_override INTEGER NULL"))
+            conn.commit()
+
+        # schedule_weeks.published_at
+        if "published_at" not in week_columns:
+            conn.execute(text("ALTER TABLE schedule_weeks ADD COLUMN published_at TIMESTAMP NULL"))
             conn.commit()
 
 
@@ -36,6 +48,7 @@ def init_db():
                 min_shifts_per_week=0,
                 max_shifts_per_week=7,
                 min_gap_hours=12,
+                satisfaction_override=None,
             )
             db.add(admin_user)
             db.commit()
@@ -43,7 +56,9 @@ def init_db():
         else:
             if getattr(admin, "is_schedulable", None) is None:
                 admin.is_schedulable = True
-                db.commit()
+            if getattr(admin, "satisfaction_override", None) is None:
+                admin.satisfaction_override = None
+            db.commit()
             print("Admin user already exists")
     finally:
         db.close()
